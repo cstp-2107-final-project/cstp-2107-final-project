@@ -58,6 +58,32 @@ export default function Dashboard() {
           </tbody>
         </table>
       </div>
+
+      <div className="mt-10 bg-white rounded-xl shadow p-6">
+        <h2 className="text-lg font-semibold mb-4">Pet Owners</h2>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-100 border-b">
+              <th className="p-2">Name</th>
+              <th className="p-2">Email</th>
+              <th className="p-2">Location</th>
+              <th className="p-2">Pets Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(db.owners || []).map(o => (
+              <tr key={o.id} className="border-b hover:bg-gray-50">
+                <td className="p-2">{o.name}</td>
+                <td className="p-2">{o.email}</td>
+                <td className="p-2">{o.location}</td>
+                <td className="p-2">{o.pets?.length || 0}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
     </div>
+
   );
 }
