@@ -1,109 +1,67 @@
-import { loadDB, saveDB } from "../store/db";
-import { useState } from "react";
+import { loadDB } from "../store/db";
+import { useAuth } from "../auth/guards";
+import { useMemo } from "react";
 
 export default function Pets() {
-  const [db, setDb] = useState(loadDB());
-  const [newPet, setNewPet] = useState({
-    name: "",
-    species: "",
-    breed: "",
-    age: "",
-    owner: "",
-    contact: "",
-  });
+  const auth = useAuth();
+  const db = loadDB() || {};
+  const pets = db.pets || [];
+  const owners = db.owners || [];
+  const isAdmin = auth?.role === "admin";
 
-  const handleAddPet = (e) => {
-    e.preventDefault();
-    const updated = {
-      ...db,
-      pets: [
-        ...db.pets,
-        {
-          id: crypto.randomUUID(),
-          ...newPet,
-          age: parseInt(newPet.age) || 0,
-        },
-      ],
-    };
-    saveDB(updated);
-    setDb(updated);
-    setNewPet({ name: "", species: "", breed: "", age: "", owner: "", contact: "" });
-  };
+  const me = useMemo(() => {
+    if (!auth?.email) return null;
+    const email = auth.email.toLowerCase();
+    return owners.find(o => (o.email || "").toLowerCase() === email) || null;
+  }, [owners, auth?.email]);
+
+  const myPetIds = new Set(me?.pets || []);
+
+  const filteredPets = useMemo(() => {
+    if (isAdmin) return pets;
+    const email = (auth?.email || "").toLowerCase();
+    const ownerId = me?.id;
+    const ownerName = me?.name || "";
+    return pets.filter(p => {
+      const byId = myPetIds.size > 0 && myPetIds.has(p.id);
+      const byOwnerId = ownerId && p.ownerId === ownerId;
+      const byEmail = (p.ownerEmail || "").toLowerCase() === email;
+      const byName = ownerName && (p.owner === ownerName || p.ownerName === ownerName);
+      return byId || byOwnerId || byEmail || byName;
+    });
+  }, [isAdmin, pets, myPetIds, me, auth?.email]);
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4 text-purple-700">Pets Directory</h1>
-
-      <form onSubmit={handleAddPet} className="mb-6 grid grid-cols-3 gap-4">
-        <input
-          className="border p-2 rounded"
-          placeholder="Name"
-          value={newPet.name}
-          onChange={(e) => setNewPet({ ...newPet, name: e.target.value })}
-          required
-        />
-        <input
-          className="border p-2 rounded"
-          placeholder="Species"
-          value={newPet.species}
-          onChange={(e) => setNewPet({ ...newPet, species: e.target.value })}
-        />
-        <input
-          className="border p-2 rounded"
-          placeholder="Breed"
-          value={newPet.breed}
-          onChange={(e) => setNewPet({ ...newPet, breed: e.target.value })}
-        />
-        <input
-          className="border p-2 rounded"
-          placeholder="Age"
-          value={newPet.age}
-          onChange={(e) => setNewPet({ ...newPet, age: e.target.value })}
-        />
-        <input
-          className="border p-2 rounded"
-          placeholder="Owner"
-          value={newPet.owner}
-          onChange={(e) => setNewPet({ ...newPet, owner: e.target.value })}
-        />
-        <input
-          className="border p-2 rounded"
-          placeholder="Contact"
-          value={newPet.contact}
-          onChange={(e) => setNewPet({ ...newPet, contact: e.target.value })}
-        />
-        <button
-          type="submit"
-          className="col-span-3 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-        >
-          Add Pet
-        </button>
-      </form>
-
-      <table className="w-full bg-white shadow rounded">
-        <thead className="bg-purple-200">
-          <tr>
-            <th className="p-2">Name</th>
-            <th className="p-2">Species</th>
-            <th className="p-2">Breed</th>
-            <th className="p-2">Age</th>
-            <th className="p-2">Owner</th>
-            <th className="p-2">Contact</th>
-          </tr>
-        </thead>
-        <tbody>
-          {db.pets.map((p) => (
-            <tr key={p.id} className="border-b hover:bg-purple-50">
-              <td className="p-2">{p.name}</td>
-              <td className="p-2">{p.species}</td>
-              <td className="p-2">{p.breed}</td>
-              <td className="p-2">{p.age}</td>
-              <td className="p-2">{p.owner}</td>
-              <td className="p-2">{p.contact}</td>
+    <div>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">{isAdmin ? "Pets Directory" : "My Pets"}</h1>
+      <div className="bg-white rounded-xl shadow overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-indigo-50 border-b">
+              <th className="p-2 text-left">Name</th>
+              <th className="p-2 text-left">Species</th>
+              <th className="p-2 text-left">Breed</th>
+              {isAdmin && <th className="p-2 text-left">Owner</th>}
+              {isAdmin && <th className="p-2 text-left">Owner Email</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredPets.length === 0 ? (
+              <tr><td colSpan={isAdmin ? 5 : 3} className="p-3 text-sm text-gray-500">{isAdmin ? "No pets." : "No pets yet."}</td></tr>
+            ) : (
+              filteredPets.map(p => (
+                <tr key={p.id} className="border-b hover:bg-gray-50">
+                  <td className="p-2">{p.name}</td>
+                  <td className="p-2">{p.species}</td>
+                  <td className="p-2">{p.breed}</td>
+                  {isAdmin && <td className="p-2">{p.ownerName || p.owner || ""}</td>}
+                  {isAdmin && <td className="p-2">{p.ownerEmail || ""}</td>}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

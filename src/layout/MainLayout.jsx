@@ -1,55 +1,48 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { FaDog, FaClipboardList, FaSyringe, FaFileInvoiceDollar, FaTachometerAlt } from "react-icons/fa";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useAuth, signOut } from "../auth/guards";
 
 export default function MainLayout() {
-  const { pathname } = useLocation();
+  const auth = useAuth();
+  const nav = useNavigate();
+  const isAdmin = auth?.role === "admin";
 
-  const links = [
-    { to: "/", label: "Dashboard", icon: <FaTachometerAlt /> },
-    { to: "/pets", label: "Pets", icon: <FaDog /> },
-    { to: "/appointments", label: "Appointments", icon: <FaClipboardList /> },
-    { to: "/vaccinations", label: "Vaccinations", icon: <FaSyringe /> },
-    { to: "/billing", label: "Billing", icon: <FaFileInvoiceDollar /> },
-  ];
+  const linkCls = ({ isActive }) =>
+    `flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 ${isActive ? "bg-white/15 font-medium" : ""}`;
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen grid grid-cols-[260px_1fr] bg-slate-50">
       {/* Sidebar */}
-      <aside className="w-60 bg-gradient-to-b from-blue-700 to-blue-900 text-white flex flex-col">
-        <div className="text-center py-6 border-b border-blue-500">
-          <h1 className="text-2xl font-bold">🐾 Pet Clinic</h1>
-        </div>
-        <nav className="flex-1 p-4 space-y-3">
-          {links.map(({ to, label, icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className={`flex items-center gap-3 p-2 rounded-lg transition ${
-                pathname === to
-                  ? "bg-blue-500"
-                  : "hover:bg-blue-600/40"
-              }`}
-            >
-              <span className="text-lg">{icon}</span>
-              <span className="font-medium">{label}</span>
-            </Link>
-          ))}
+      <aside className="bg-indigo-700 text-white p-4 space-y-4">
+        <div className="text-xl font-bold">🐾 Pet Clinic</div>
+        <nav className="space-y-1">
+          <NavLink to="/dashboard" className={linkCls}>Dashboard</NavLink>
+          <NavLink to="/pets" className={linkCls}>Pets</NavLink>
+          <NavLink to="/appointments" className={linkCls}>Appointments</NavLink>
+          <NavLink to="/vaccinations" className={linkCls}>Vaccinations</NavLink>
+          <NavLink to="/billing" className={linkCls}>Billing</NavLink>
+          {isAdmin && <NavLink to="/admin-data" className={linkCls}>Admin Panel</NavLink>}
         </nav>
-        <footer className="p-4 text-sm text-blue-200 text-center border-t border-blue-600">
-          © 2025 PetCare
-        </footer>
+        <div className="mt-6 text-xs opacity-80">
+          {auth?.name} · {auth?.role}
+        </div>
+        <button
+          className="mt-2 text-sm underline"
+          onClick={() => { signOut(); nav("/login"); }}
+        >
+          Sign out
+        </button>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-        <header className="bg-white shadow px-6 py-3 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-800">Clinic Dashboard</h2>
-          <div className="text-sm text-gray-500">Admin Panel</div>
+      {/* Main */}
+      <main className="p-6">
+        <header className="flex items-center justify-between mb-6">
+          <h1 className="text-lg font-semibold text-slate-800">
+            {isAdmin ? "Clinic Dashboard" : "Client Dashboard"}
+          </h1>
         </header>
-
-        <section className="p-6 flex-1 overflow-y-auto">
+        <div className="bg-white rounded-xl shadow p-6">
           <Outlet />
-        </section>
+        </div>
       </main>
     </div>
   );
