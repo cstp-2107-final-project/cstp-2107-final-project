@@ -197,7 +197,6 @@
 //     </td>
 //   );
 // }
-// src/frontend/pages/OwnerDashboard.jsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth/guards.jsx";
 
@@ -258,33 +257,43 @@ export default function OwnerDashboard() {
   const unpaidCount = ownerInvoices.filter((i) => !i.paid).length;
 
   return (
-    <div className="space-y-6">
-      <section className="bg-white rounded-xl shadow p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-800">
-            Welcome, {owner?.name || user?.name || user?.email || "Owner"}
-          </h2>
-          {owner && (
-            <p className="text-slate-600 text-sm mt-1">
-              {owner.email} • {owner.phone}
-            </p>
-          )}
-        </div>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <OwnerStat label="Pets" value={ownerPets.length} />
-          <OwnerStat label="Appointments" value={ownerAppointments.length} />
-          <OwnerStat label="Unpaid Bills" value={unpaidCount} />
-        </div>
-      </section>
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-12 px-6">
+      <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn">
+
+        {/* Welcome card */}
+        <section className="bg-white rounded-2xl shadow-md border border-green-100 p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+
+          <div>
+            <h2 className="text-3xl font-extrabold text-green-700">
+              Welcome, {owner?.name || user?.name || user?.email || "Owner"}
+            </h2>
+
+            {owner && (
+              <p className="text-gray-600 text-sm mt-2">
+                {owner.email} • {owner.phone || "No phone on file"}
+              </p>
+            )}
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 w-full md:w-auto">
+            <OwnerStat label="Pets" value={ownerPets.length} />
+            <OwnerStat label="Appointments" value={ownerAppointments.length} />
+            <OwnerStat label="Unpaid Bills" value={unpaidCount} />
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
 
 function OwnerStat({ label, value }) {
   return (
-    <div className="bg-indigo-50 text-indigo-700 rounded-xl px-4 py-3">
-      <div className="text-xs uppercase tracking-wide">{label}</div>
-      <div className="text-xl font-semibold">{value}</div>
+    <div className="bg-green-50 text-green-700 rounded-2xl px-6 py-4 shadow-sm border border-green-100 text-center">
+      <div className="text-xs uppercase tracking-wide text-green-800 font-medium">
+        {label}
+      </div>
+      <div className="text-2xl font-bold mt-1">{value}</div>
     </div>
   );
 }

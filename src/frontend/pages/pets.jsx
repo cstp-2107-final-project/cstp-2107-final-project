@@ -1,4 +1,3 @@
-// src/frontend/pages/pets.jsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth/guards.jsx";
 
@@ -29,36 +28,48 @@ export default function Pets() {
     : [];
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-4 text-slate-800">Your Pets</h2>
-      {ownerPets.length === 0 ? (
-        <p className="text-slate-500 text-sm">
-          No pets found for your account.
-        </p>
-      ) : (
-        <div className="overflow-x-auto bg-white rounded-xl shadow">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="bg-slate-100 text-left">
-                <th className="px-3 py-2">Name</th>
-                <th className="px-3 py-2">Species</th>
-                <th className="px-3 py-2">Breed</th>
-                <th className="px-3 py-2">Age</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ownerPets.map((p) => (
-                <tr key={p._id || p.id} className="border-b last:border-0">
-                  <td className="px-3 py-2 font-medium">{p.name}</td>
-                  <td className="px-3 py-2">{p.species}</td>
-                  <td className="px-3 py-2">{p.breed}</td>
-                  <td className="px-3 py-2">{p.age}</td>
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-12 px-6">
+      <div className="max-w-4xl mx-auto animate-fadeIn">
+
+        {/* Title */}
+        <h2 className="text-4xl font-extrabold text-green-700 mb-6 tracking-tight">
+          Your Pets
+        </h2>
+
+        {/* Empty State */}
+        {ownerPets.length === 0 ? (
+          <p className="text-slate-600 text-lg bg-white border border-green-100 shadow-sm rounded-2xl p-6">
+            No pets found for your account.
+          </p>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-md border border-green-100 p-4 overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-green-50 text-green-900 font-semibold border-b border-green-100">
+                  <th className="px-4 py-3 text-left">Name</th>
+                  <th className="px-4 py-3 text-left">Species</th>
+                  <th className="px-4 py-3 text-left">Breed</th>
+                  <th className="px-4 py-3 text-left">Age</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+
+              <tbody>
+                {ownerPets.map((p) => (
+                  <tr
+                    key={p._id || p.id}
+                    className="border-b last:border-0 hover:bg-green-50/40 transition"
+                  >
+                    <td className="px-4 py-3 font-medium text-slate-800">{p.name}</td>
+                    <td className="px-4 py-3 text-slate-700">{p.species}</td>
+                    <td className="px-4 py-3 text-slate-700">{p.breed}</td>
+                    <td className="px-4 py-3 text-slate-700">{p.age}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

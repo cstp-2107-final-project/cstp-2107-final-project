@@ -1,4 +1,3 @@
-// src/frontend/pages/billing.jsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth/guards.jsx";
 
@@ -30,6 +29,7 @@ export default function Billing() {
   const ownerPets = owner
     ? pets.filter((p) => p.ownerId === owner._id || p.ownerId === owner.id)
     : [];
+
   const petIds = new Set(ownerPets.map((p) => p._id || p.id));
 
   const ownerInvoices = invoices.filter((i) =>
@@ -44,63 +44,77 @@ export default function Billing() {
     .reduce((sum, i) => sum + (i.amount || 0), 0);
 
   return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-slate-800">Billing</h2>
-        <div className="text-sm">
-          <span className="text-slate-600 mr-2">Total outstanding:</span>
-          <span className="text-emerald-700 font-bold">
-            ${totalDue.toFixed(2)}
-          </span>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-12 px-6 animate-fadeIn">
+      <div className="max-w-5xl mx-auto space-y-10">
 
-      <div className="bg-white rounded-xl shadow p-6">
-        {ownerInvoices.length === 0 ? (
-          <p className="text-slate-500 text-sm">
-            No invoices found for your pets.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="bg-slate-100 text-left">
-                  <th className="px-3 py-2">Date</th>
-                  <th className="px-3 py-2">Pet</th>
-                  <th className="px-3 py-2">Description</th>
-                  <th className="px-3 py-2">Amount</th>
-                  <th className="px-3 py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ownerInvoices.map((inv) => {
-                  const pet = findPet(inv.petId);
-                  return (
-                    <tr key={inv._id || inv.id} className="border-b last:border-0">
-                      <td className="px-3 py-2">{inv.date}</td>
-                      <td className="px-3 py-2">{pet?.name || "Unknown"}</td>
-                      <td className="px-3 py-2">{inv.description}</td>
-                      <td className="px-3 py-2">
-                        ${inv.amount?.toFixed(2) ?? "0.00"}
-                      </td>
-                      <td className="px-3 py-2">
-                        {inv.paid ? (
-                          <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                            Paid
-                          </span>
-                        ) : (
-                          <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">
-                            Due
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        {/* HEADER CARD */}
+        <div className="bg-white rounded-2xl shadow-md border border-green-100 p-8 flex justify-between items-center">
+          <h2 className="text-3xl font-extrabold text-green-700">Billing</h2>
+
+          <div className="text-lg font-semibold">
+            <span className="text-gray-600 mr-1">Outstanding:</span>
+            <span className="text-green-700">${totalDue.toFixed(2)}</span>
           </div>
-        )}
+        </div>
+
+        {/* INVOICES TABLE */}
+        <div className="bg-white rounded-2xl shadow-md border border-green-100 p-8">
+          {ownerInvoices.length === 0 ? (
+            <p className="text-gray-600 text-sm">
+              No invoices found for your pets.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="bg-green-50 text-green-900 font-semibold border-b border-green-100">
+                    <th className="px-4 py-3 text-left">Date</th>
+                    <th className="px-4 py-3 text-left">Pet</th>
+                    <th className="px-4 py-3 text-left">Description</th>
+                    <th className="px-4 py-3 text-left">Amount</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {ownerInvoices.map((inv) => {
+                    const pet = findPet(inv.petId);
+
+                    return (
+                      <tr
+                        key={inv._id || inv.id}
+                        className="border-b hover:bg-green-50/40 transition"
+                      >
+                        <td className="px-4 py-3">{inv.date}</td>
+                        <td className="px-4 py-3">{pet?.name || "Unknown"}</td>
+                        <td className="px-4 py-3">{inv.description}</td>
+
+                        <td className="px-4 py-3">
+                          <span className="font-medium text-gray-800">
+                            ${inv.amount?.toFixed(2) ?? "0.00"}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          {inv.paid ? (
+                            <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">
+                              Paid
+                            </span>
+                          ) : (
+                            <span className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">
+                              Due
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

@@ -18,13 +18,9 @@ import { useAuth } from "./auth/guards.jsx";
 function ProtectedRoute({ children, allowedRoles }) {
   const { user } = useAuth();
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (!user) return <Navigate to="/login" replace />;
+  if (allowedRoles && !allowedRoles.includes(user.role))
     return <Navigate to="/" replace />;
-  }
 
   return children;
 }
@@ -33,26 +29,35 @@ export default function App() {
   const { user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Top nav */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="text-sm font-semibold text-slate-800">
-            Paws &amp; Care Clinic
+    <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-green-100 text-slate-800">
+      {/* Top Nav */}
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md shadow-sm border-b border-green-200">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+
+          {/* LOGO */}
+          <Link
+            to="/"
+            className="text-lg font-extrabold text-green-700 tracking-tight hover:text-green-900 transition"
+          >
+            🐾 Paws & Care Clinic
           </Link>
-          <div className="flex items-center gap-3 text-xs">
+
+          {/* RIGHT SIDE */}
+          <div className="flex items-center gap-3 text-sm">
             {user && (
               <span className="text-slate-600">
                 Logged in as{" "}
-                <span className="font-medium">
+                <span className="font-semibold text-green-700">
                   {user.name || user.email} ({user.role})
                 </span>
               </span>
             )}
+
+            {/* Auth Buttons */}
             {user ? (
               <button
                 onClick={logout}
-                className="px-3 py-1 rounded-lg border border-slate-300 text-slate-700"
+                className="px-4 py-1.5 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition"
               >
                 Logout
               </button>
@@ -60,13 +65,13 @@ export default function App() {
               <>
                 <Link
                   to="/login"
-                  className="px-3 py-1 rounded-lg border border-slate-300 text-slate-700"
+                  className="px-4 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 transition"
                 >
                   Login
                 </Link>
                 <Link
                   to="/signup"
-                  className="px-3 py-1 rounded-lg bg-indigo-600 text-white"
+                  className="px-4 py-1.5 rounded-xl bg-green-600 text-white hover:bg-green-700 transition shadow-sm"
                 >
                   Sign Up
                 </Link>
@@ -76,8 +81,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* Routed content */}
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      {/* Routed pages */}
+      <main className="max-w-6xl mx-auto px-4 py-8 animate-fadeIn">
         <Routes>
           {/* Public */}
           <Route path="/" element={<Home />} />
