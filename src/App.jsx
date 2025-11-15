@@ -13,6 +13,8 @@ import AppointmentsPage from "./frontend/pages/appointments.jsx";
 import VaccinationsPage from "./frontend/pages/Vaccinations.jsx";
 import BillingPage from "./frontend/pages/billing.jsx";
 
+import AdminPets from "./frontend/pages/AdminPets.jsx";
+
 import { useAuth } from "./auth/guards.jsx";
 
 function ProtectedRoute({ children, allowedRoles }) {
@@ -90,6 +92,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/pets"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminPets />
               </ProtectedRoute>
             }
           />
