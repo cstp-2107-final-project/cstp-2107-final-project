@@ -1,132 +1,117 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { useAuth } from "./context/AuthContext";
+
+// Layout Components
 import Sidebar from './components/common/Sidebar';
 import TopNavigation from './components/common/TopNavigation';
-import AdminDashboard from './components/admin/AdminDashboard';
-import AdminAppointments from './components/admin/AdminAppointments';
-import AdminVaccinations from './components/admin/AdminVaccinations';
-import AdminBilling from './components/admin/AdminBilling';
-import AdminDoctors from './components/admin/AdminDoctors';
-import AdminPets from './components/admin/AdminPets';
-import OwnerDashboard from './components/owner/OwnerDashboard';
-import OwnerAppointments from './components/owner/OwnerAppointments';
-import OwnerVaccinations from './components/owner/OwnerVaccinations';
-import Login from './components/auth/Login';
 
-// REMOVE: old mockData login
-// import { users } from './data/mockData';
+// AUTH
+import Login from "./components/auth/Login";
+import Signup from "./components/auth/Signup";
 
-// ADD FIREBASE AUTH
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "./firebase";
+// ADMIN PAGES
+import AdminDashboard from "./components/admin/AdminDashboard";
+import AdminAppointments from "./components/admin/AdminAppointments";
+import AdminVaccinations from "./components/admin/AdminVaccinations";
+import AdminBilling from "./components/admin/AdminBilling";
+import AdminDoctors from "./components/admin/AdminDoctors";
+import AdminPets from "./components/admin/AdminPets";
 
-const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [currentPage, setCurrentPage] = useState('dashboard');
+// OWNER PAGES
+import OwnerDashboard from "./components/owner/OwnerDashboard";
+import OwnerAppointments from "./components/owner/OwnerAppointments";
+import OwnerVaccinations from "./components/owner/OwnerVaccinations";
+
+// DOCTOR PAGES
+import DoctorDashboard from "./components/doctor/DoctorDashboard";
+import DoctorAppointments from "./components/doctor/DoctorAppointments";
+import DoctorPatients from "./components/doctor/DoctorPatients";
+
+export default function App() {
+  const { user, role, loading, logout } = useAuth();
+
+  const [currentPage, setCurrentPage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // 🔥 NEW FIREBASE LOGIN FUNCTION
-  const handleLogin = async (username, password) => {
-    try {
-      // Sign into Firebase
-      const result = await signInWithEmailAndPassword(auth, username, password);
-      const fbUser = result.user;
+  const [showSignup, setShowSignup] = useState(false);
 
-      // Assign role based on email prefix OR choose your rule
-      const role = username.startsWith("admin")
-        ? "admin"
-        : "owner";
+  if (loading) return <div className="p-6">Loading...</div>;
 
-      const user = {
-        id: fbUser.uid,
-        username: fbUser.email,
-        fullName: fbUser.displayName || fbUser.email.split("@")[0],
-        role: role
-      };
-
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      setCurrentPage("dashboard");
-      return true;
-
-    } catch (err) {
-      console.error("Login failed:", err);
-      return false;
+  // -----------------------------
+  // NOT LOGGED IN
+  // -----------------------------
+  if (!user) {
+    if (showSignup) {
+      return <Signup onSwitchToLogin={() => setShowSignup(false)} />;
     }
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setIsAuthenticated(false);
-    setCurrentPage('dashboard');
-  };
-
-  // Render current page based on user role
-  const renderPage = () => {
-    if (!currentUser) return null;
-
-    if (currentUser.role === 'admin') {
-      switch (currentPage) {
-        case 'dashboard':
-          return <AdminDashboard />;
-        case 'appointments':
-          return <AdminAppointments />;
-        case 'vaccinations':
-          return <AdminVaccinations />;
-        case 'billing':
-          return <AdminBilling />;
-        case 'doctors':
-          return <AdminDoctors />;
-        case 'pets':
-          return <AdminPets />;
-        default:
-          return <AdminDashboard />;
-      }
-    } else {
-      switch (currentPage) {
-        case 'dashboard':
-        case 'pets':
-          return <OwnerDashboard ownerId={currentUser.id} />;
-        case 'appointments':
-          return <OwnerAppointments ownerId={currentUser.id} />;
-        case 'vaccinations':
-          return <OwnerVaccinations ownerId={currentUser.id} />;
-        default:
-          return <OwnerDashboard ownerId={currentUser.id} />;
-      }
-    }
-  };
-
-  if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onSwitchToSignup={() => setShowSignup(true)} />;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100">
+  // -----------------------------
+  // RENDER CORRECT PAGE BASED ON ROLE
+  // -----------------------------
+  const renderPage = () => {
+    // ADMIN =====================
+    if (role === "admin") {
+      switch (currentPage) {
+        case "dashboard": return <AdminDashboard />;
+        case "appointments": return <AdminAppointments />;
+        case "vaccinations": return <AdminVaccinations />;
+        case "billing": return <AdminBilling />;
+        case "doctors": return <AdminDoctors />;
+        case "pets": return <AdminPets />;
+        default: return <AdminDashboard />;
+      }
+    }
 
-      <Sidebar 
-        userRole={currentUser.role}
-        userName={currentUser.fullName}
+    // DOCTOR =====================
+    if (role === "doctor") {
+      switch (currentPage) {
+        case "dashboard": return <DoctorDashboard />;
+        case "appointments": return <DoctorAppointments />;
+        case "patients": return <DoctorPatients />;
+        default: return <DoctorDashboard />;
+      }
+    }
+
+    // OWNER =====================
+    if (role === "owner") {
+      switch (currentPage) {
+        case "dashboard":
+        case "pets": return <OwnerDashboard ownerId={user.uid} />;
+        case "appointments": return <OwnerAppointments ownerId={user.uid} />;
+        case "vaccinations": return <OwnerVaccinations ownerId={user.uid} />;
+        default: return <OwnerDashboard ownerId={user.uid} />;
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex">
+
+      {/* SIDEBAR */}
+      <Sidebar
+        userRole={role}
+        userName={user.name}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         sidebarOpen={sidebarOpen}
       />
-      
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-        <TopNavigation 
-          currentUser={currentUser}
+
+      {/* MAIN AREA */}
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"}`}>
+
+        {/* TOP NAV */}
+        <TopNavigation
+          currentUser={{ fullName: user.name, role }}
           currentPage={currentPage}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          onLogout={handleLogout}
+          onLogout={logout}
         />
 
-        <div className="p-6">
-          {renderPage()}
-        </div>
+        <div className="p-6">{renderPage()}</div>
       </div>
     </div>
   );
-};
-
-export default App;
+}
