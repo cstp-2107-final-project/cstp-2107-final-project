@@ -1,7 +1,7 @@
 // src/frontend/pages/AdminData.jsx
 import { useEffect, useState } from "react";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "http://localhost:5001/api";
 
 export default function AdminData() {
   const [owners, setOwners] = useState([]);

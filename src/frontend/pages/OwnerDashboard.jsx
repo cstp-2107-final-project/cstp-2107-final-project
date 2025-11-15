@@ -201,7 +201,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth/guards.jsx";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "http://localhost:5001/api";
 
 export default function OwnerDashboard() {
   const { user } = useAuth();
