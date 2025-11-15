@@ -11,7 +11,13 @@ import OwnerDashboard from './components/owner/OwnerDashboard';
 import OwnerAppointments from './components/owner/OwnerAppointments';
 import OwnerVaccinations from './components/owner/OwnerVaccinations';
 import Login from './components/auth/Login';
-import { users } from './data/mockData';
+
+// REMOVE: old mockData login
+// import { users } from './data/mockData';
+
+// ADD FIREBASE AUTH
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "./firebase";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -19,15 +25,34 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const handleLogin = (username, password) => {
-    const user = users.find(u => u.username === username && u.password === password);
-    if (user) {
+  // 🔥 NEW FIREBASE LOGIN FUNCTION
+  const handleLogin = async (username, password) => {
+    try {
+      // Sign into Firebase
+      const result = await signInWithEmailAndPassword(auth, username, password);
+      const fbUser = result.user;
+
+      // Assign role based on email prefix OR choose your rule
+      const role = username.startsWith("admin")
+        ? "admin"
+        : "owner";
+
+      const user = {
+        id: fbUser.uid,
+        username: fbUser.email,
+        fullName: fbUser.displayName || fbUser.email.split("@")[0],
+        role: role
+      };
+
       setCurrentUser(user);
       setIsAuthenticated(true);
-      setCurrentPage('dashboard');
+      setCurrentPage("dashboard");
       return true;
+
+    } catch (err) {
+      console.error("Login failed:", err);
+      return false;
     }
-    return false;
   };
 
   const handleLogout = () => {
@@ -78,6 +103,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
+
       <Sidebar 
         userRole={currentUser.role}
         userName={currentUser.fullName}
