@@ -6,14 +6,16 @@ export default function Login({ onSwitchToSignup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const role = await login(email, password);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  const role = await login(email, password);
 
-    if (!role) {
-      alert("Invalid login.");
-    }
-  };
+  if (!role) {
+    // login() already showed an alert if it failed
+    return;
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">

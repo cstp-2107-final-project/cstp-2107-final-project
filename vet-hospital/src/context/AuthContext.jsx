@@ -12,24 +12,19 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);   // { uid, name, email }
-  const [role, setRole] = useState(null);   // "admin" | "doctor" | "owner" | null
+  const [user, setUser] = useState(null);      // { uid, name, email }
+  const [role, setRole] = useState(null);      // "admin" | "doctor" | "owner" | null
   const [loading, setLoading] = useState(true);
 
-  // ---------------------------
-  // SIGNUP
-  // ---------------------------
-  const signup = async (name, email, password, role) => {
+  // ---------- SIGN UP ----------
+  const signup = async (name, email, password, roleValue) => {
     const result = await createUserWithEmailAndPassword(auth, email, password);
-
-    // Set displayName for convenience
     await updateProfile(result.user, { displayName: name });
 
-    // Create Firestore user doc
     await setDoc(doc(db, "users", result.user.uid), {
       name,
       email,
-      role,
+      role: roleValue,
       createdAt: new Date(),
     });
 
@@ -38,58 +33,64 @@ export function AuthProvider({ children }) {
       name,
       email,
     });
-    setRole(role);
+    setRole(roleValue);
   };
 
-  // ---------------------------
-  // LOGIN
-  // ---------------------------
+  // ---------- LOGIN ----------
   const login = async (email, password) => {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    const fbUser = result.user;
-
-    let roleFromDb = null;
-
     try {
-      const snap = await getDoc(doc(db, "users", fbUser.uid));
-      if (snap.exists()) {
-        roleFromDb = snap.data().role;
-      } else {
-        console.warn("No Firestore user doc found for UID:", fbUser.uid);
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const fbUser = result.user;
+
+      // Try to read role from Firestore
+      let roleFromDb = null;
+      try {
+        const snap = await getDoc(doc(db, "users", fbUser.uid));
+        if (snap.exists()) {
+          roleFromDb = snap.data().role;
+        }
+      } catch (err) {
+        console.error("Error fetching user role on login:", err);
       }
+
+      // Fallbacks so it doesn't become "Invalid login" for real users
+      if (!roleFromDb) {
+        if (fbUser.email === "admin@clinic.com") {
+          roleFromDb = "admin";
+        } else {
+          roleFromDb = "owner"; // default for normal signups
+        }
+      }
+
+      setUser({
+        uid: fbUser.uid,
+        name: fbUser.displayName,
+        email: fbUser.email,
+      });
+      setRole(roleFromDb);
+
+      return roleFromDb;
     } catch (err) {
-      console.error("Error fetching user role on login:", err);
+      console.error("Login error:", err);
+      alert(err.message || "Login failed. Check email/password.");
+      return null;
     }
-
-    setUser({
-      uid: fbUser.uid,
-      name: fbUser.displayName,
-      email: fbUser.email,
-    });
-    setRole(roleFromDb);
-
-    return roleFromDb;
   };
 
-  // ---------------------------
-  // LOGOUT
-  // ---------------------------
+  // ---------- LOGOUT ----------
   const logout = async () => {
     await signOut(auth);
     setUser(null);
     setRole(null);
   };
 
-  // ---------------------------
-  // AUTH STATE LISTENER
-  // ---------------------------
+  // ---------- AUTH STATE LISTENER ----------
   useEffect(() => {
     setLoading(true);
 
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       try {
         if (!fbUser) {
-          // Not logged in
           setUser(null);
           setRole(null);
           return;
@@ -100,11 +101,17 @@ export function AuthProvider({ children }) {
           const snap = await getDoc(doc(db, "users", fbUser.uid));
           if (snap.exists()) {
             roleFromDb = snap.data().role;
-          } else {
-            console.warn("No Firestore user doc found for UID:", fbUser.uid);
           }
         } catch (err) {
-          console.error("Error loading user role in onAuthStateChanged:", err);
+          console.error("Error loading user role:", err);
+        }
+
+        if (!roleFromDb) {
+          if (fbUser.email === "admin@clinic.com") {
+            roleFromDb = "admin";
+          } else {
+            roleFromDb = "owner";
+          }
         }
 
         setUser({
@@ -114,7 +121,6 @@ export function AuthProvider({ children }) {
         });
         setRole(roleFromDb);
       } finally {
-        // VERY IMPORTANT: never stay stuck on loading
         setLoading(false);
       }
     });
@@ -122,16 +128,13 @@ export function AuthProvider({ children }) {
     return () => unsub();
   }, []);
 
-  const value = {
-    user,
-    role,
-    loading,
-    signup,
-    login,
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{ user, role, loading, signup, login, logout }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);
